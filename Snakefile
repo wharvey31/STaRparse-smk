@@ -26,6 +26,14 @@ def find_sex(wildcards):
     return manifest_df.at[wildcards.sample, "SEX"]
 
 
+wildcard_constraints:
+    sample="|".join(manifest_df.index),
+
+
+localrules:
+    all,
+
+
 rule all:
     input:
         expand(
@@ -46,6 +54,10 @@ rule expansion_hunter:
         sex=find_sex,
     conda:
         "envs/eh.yaml"
+    threads: 1
+    resources:
+        mem=8,
+        hrs=24,
     shell:
         """
         ExpansionHunter --reads {input.aln} --reference {input.ref} --varaint-catalog {input.catalog} --output-prefix $( echo {input.vcf} | sed 's/.vcf//' ) --sex {params.sex}
@@ -57,6 +69,10 @@ rule vcfparse:
         vcf=rules.expansion_hunter.output.vcf,
     output:
         csv="tmp/vcf_parse/CGG_Repeats_{sample}.tsv",
+    threads: 1
+    resources:
+        mem=8,
+        hrs=24,
     run:
         with open(output.csv, "w") as outfile:
             header = "Call,Sample_ID,Chr,Start,End,GT,Ref_Units,Allele1_Units,Allele2_Units".replace(
@@ -105,6 +121,10 @@ rule jsonparse:
         json=rules.expansion_hunter.output.json,
     output:
         csv="tmp/json_parse/ReadCoverage_{sample}.tsv",
+    threads: 1
+    resources:
+        mem=8,
+        hrs=24,
     run:
         #    COLLECT JSON FILES FROM SPECIFIED INPUT PATH
         #    INITIALIZE STOREAGE FILE
@@ -143,6 +163,10 @@ rule filter_r:
         script_dir=os.path.join(SDIR, "scripts/"),
     conda:
         "envs/r_conda.yaml"
+    threads: 1
+    resources:
+        mem=8,
+        hrs=24,
     script:
         """
         scripts/filter.R
@@ -159,6 +183,10 @@ rule summaries:
         script_dir=os.path.join(SDIR, "scripts/"),
     conda:
         "envs/r_conda.yaml"
+    threads: 1
+    resources:
+        mem=8,
+        hrs=24,
     script:
         """
         scripts/summaries.R
