@@ -1,0 +1,9 @@
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - r-dplyr
+  - r-reshape2
+  - r-stringr
+  - r-plyr
