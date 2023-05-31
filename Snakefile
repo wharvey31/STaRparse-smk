@@ -68,7 +68,7 @@ rule expansion_hunter:
         hrs=24,
     shell:
         """
-        ExpansionHunter --reads {input.aln} --reference {input.ref} --varaint-catalog {input.catalog} --output-prefix $( echo {output.vcf} | sed 's/.vcf//' ) --sex {params.sex}
+        ExpansionHunter --reads {input.aln} --reference {input.ref} --variant-catalog {input.catalog} --output-prefix $( echo {output.vcf} | sed 's/.vcf//' ) --sex {params.sex}
         """
 
 
