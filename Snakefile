@@ -1,8 +1,7 @@
 import json
 import pandas as pd
-import glob
 import os, sys
-import pyvcf
+import vcf
 
 
 configfile: "config.yaml"
@@ -11,11 +10,20 @@ configfile: "config.yaml"
 REFERENCE = (config["REF"],)
 VARIANT_CATALOG = (config["VARIANT_CATALOG"],)
 MANIFEST = config.get("MANIFEST", "manifest.tab")
-GENOME_BUILD = config.get("GENOME_BUILD", "GRCh38")
+GENOME_BUILD = str(config.get("GENOME_BUILD", "38"))
 
 SDIR = os.path.realpath(os.path.dirname(srcdir("Snakefile")))
 
-manifest_df = pd.read_csv(MANIFEST, sep="\t")
+manifest_df = pd.read_csv(MANIFEST, sep="\t", index_col="SAMPLE")
+
+sex_list = [x for x in manifest_df["SEX"].unique() if x not in ["male", "female"]]
+
+if len(sex_list) > 0:
+    sex_string = ",".join(sex_list)
+    logging.error(
+        f"Manifest ({MANIFEST}) contains SEX values other than male or female: {sex_string}"
+    )
+    sys.exit(1)
 
 
 def find_aln(wildcards):

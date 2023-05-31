@@ -1,0 +1,4 @@
+VARIANT_CATALOG: CGG_GRCh38_CrossLinked.json
+REFERENCE: /net/eichler/vol26/eee_shared/assemblies/hg38/1kg/GRCh38_full_analysis_set_plus_decoy_hla.fa
+GENOME_BUILD: 38
+MANIFEST: manifest.tab
