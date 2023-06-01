@@ -110,7 +110,7 @@ rule vcfparse:
                         str(val)
                         for val in [
                             Call,
-                            input.vcf,
+                            wildcards.sample,
                             chrom,
                             start,
                             end,
@@ -156,7 +156,7 @@ rule jsonparse:
                     flank = str(repeat["Variants"][x]["CountsOfFlankingReads"])
                     inread = str(repeat["Variants"][x]["CountsOfInrepeatReads"])
 
-                    strings = [input.json, x, span, flank, inread]
+                    strings = [wildcards.sample, x, span, flank, inread]
                     strings = "\t".join(strings)
                     outfile.write(f"{strings}\n")
 
