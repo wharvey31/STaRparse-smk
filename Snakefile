@@ -11,6 +11,7 @@ REFERENCE = (config["REF"],)
 VARIANT_CATALOG = (config["VARIANT_CATALOG"],)
 MANIFEST = config.get("MANIFEST", "manifest.tab")
 GENOME_BUILD = str(config.get("GENOME_BUILD", "38"))
+COHORT = str(config.get("COHORT", "ALL"))
 
 SDIR = os.path.realpath(os.path.dirname(srcdir("Snakefile")))
 
@@ -134,7 +135,6 @@ rule jsonparse:
         mem=8,
         hrs=24,
     run:
-        #    COLLECT JSON FILES FROM SPECIFIED INPUT PATH
         #    INITIALIZE STOREAGE FILE
         with open(output.csv, "w+") as outfile:
             header = "Sample_ID,Call_ID,MaxSpanningRead,MaxFlankingRead,MaxInrepeatRead".replace(
@@ -144,7 +144,7 @@ rule jsonparse:
             #    LOOP THROUGH ALL JSON FILES AT GIVEN DIRECTORY
             with open(input.json) as json_file:
                 data = json.load(json_file)["LocusResults"]
-            #    LOOP THROUGH EACH READ WITHIN THE CURRENT JSON FILE
+                #    LOOP THROUGH EACH READ WITHIN THE CURRENT JSON FILE
             for x in data:
                 repeat = data[x]
                 #    ENSURE THAT READ WAS DECTECTED AND DATA IS PRESENT
@@ -155,7 +155,6 @@ rule jsonparse:
                     span = str(repeat["Variants"][x]["CountsOfSpanningReads"])
                     flank = str(repeat["Variants"][x]["CountsOfFlankingReads"])
                     inread = str(repeat["Variants"][x]["CountsOfInrepeatReads"])
-
                     strings = [wildcards.sample, x, span, flank, inread]
                     strings = "\t".join(strings)
                     outfile.write(f"{strings}\n")
@@ -166,7 +165,7 @@ rule filter_r:
         reads=rules.vcfparse.output.csv,
         coverage=rules.jsonparse.output.csv,
     output:
-        csv="results/vcf_parse/CGG_Repeats_{sample}_filtered.tsv",
+        csv="temp/filter/CGG_Repeats_{sample}_filtered.tsv",
     params:
         script_dir=os.path.join(SDIR, "scripts/"),
     conda:
@@ -175,21 +174,39 @@ rule filter_r:
     resources:
         mem=8,
         hrs=24,
-    script: "scripts/filter.R"
+    script:
+        "scripts/filter.R"
+
+
+rule combine_csv:
+    input:
+        csv=expand(rules.filter_r.output.csv, sample=manifest_df.index),
+    output:
+        csv="results/filter/combined.csv",
+    threads: 1
+    resources:
+        mem=8,
+        hrs=24,
+    run:
+        df = pd.concat([pd.read_csv(x, sep="\t", dtype=str) for x in input.csv])
+        df.to_csv(output.csv, sep="\t", index=False)
 
 
 rule summaries:
     input:
-        csv=rules.filter_r.output.csv,
+        csv=rules.combine_csv.output.csv,
     output:
-        csv="results/filter/{sample}/{sample}_by_locus.tsv",
+        dirct=directory("results/summary/combined"),
+        csv=f"results/summary/combined/{COHORT}_by_sample.csv",
     params:
         build=GENOME_BUILD,
         script_dir=os.path.join(SDIR, "scripts/"),
+        cohort=COHORT,
     conda:
         "envs/r_conda.yaml"
     threads: 1
     resources:
         mem=8,
         hrs=24,
-    script: "scripts/summaries.R"
+    script:
+        "scripts/summaries.R"
