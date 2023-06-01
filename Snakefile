@@ -64,11 +64,11 @@ rule expansion_hunter:
         "envs/eh.yaml"
     threads: 1
     resources:
-        mem=8,
+        mem=256,
         hrs=24,
     shell:
         """
-        ExpansionHunter --reads {input.aln} --reference {input.ref} --variant-catalog {input.catalog} --output-prefix $( echo {output.vcf} | sed 's/.vcf//' ) --sex {params.sex}
+        ExpansionHunter --reads {input.aln} --reference {input.ref} --variant-catalog {input.catalog} --output-prefix $( echo {output.vcf} | sed 's/.vcf//' ) --sex {params.sex} --analysis-mode seeking
         """
 
 
@@ -110,7 +110,7 @@ rule vcfparse:
                         str(val)
                         for val in [
                             Call,
-                            base,
+                            input.vcf,
                             chrom,
                             start,
                             end,
@@ -142,7 +142,7 @@ rule jsonparse:
             )
             outfile.write(f"{header}\n")
             #    LOOP THROUGH ALL JSON FILES AT GIVEN DIRECTORY
-            with open(j) as json_file:
+            with open(input.json) as json_file:
                 data = json.load(json_file)["LocusResults"]
             #    LOOP THROUGH EACH READ WITHIN THE CURRENT JSON FILE
             for x in data:
@@ -156,7 +156,7 @@ rule jsonparse:
                     flank = str(repeat["Variants"][x]["CountsOfFlankingReads"])
                     inread = str(repeat["Variants"][x]["CountsOfInrepeatReads"])
 
-                    strings = [base, x, span, flank, inread]
+                    strings = [input.json, x, span, flank, inread]
                     strings = "\t".join(strings)
                     outfile.write(f"{strings}\n")
 
