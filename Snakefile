@@ -193,11 +193,11 @@ rule summaries:
     input:
         csv=rules.combine_csv.output.csv,
     output:
-        dirct=directory("results/summary/combined"),
+        # dirct=directory("results/summary/combined"),
         csv=f"results/summary/combined/{COHORT}_by_sample.csv",
     params:
         build=GENOME_BUILD,
-        script_dir=os.path.join(SDIR, "scripts/"),
+        script_dir=os.path.dirname(output.csv),
         cohort=COHORT,
     conda:
         "envs/r_conda.yaml"
