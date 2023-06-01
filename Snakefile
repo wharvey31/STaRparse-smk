@@ -45,10 +45,7 @@ localrules:
 
 rule all:
     input:
-        expand(
-            "results/vcf_parse/CGG_Repeats_{sample}_filtered.tsv",
-            sample=manifest_df.index,
-        ),
+        f"results/summary/combined/{COHORT}_by_sample.csv",
 
 
 rule expansion_hunter:
