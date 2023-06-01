@@ -175,10 +175,7 @@ rule filter_r:
     resources:
         mem=8,
         hrs=24,
-    script:
-        """
-        scripts/filter.R
-        """
+    script: "scripts/filter.R"
 
 
 rule summaries:
@@ -195,7 +192,4 @@ rule summaries:
     resources:
         mem=8,
         hrs=24,
-    script:
-        """
-        scripts/summaries.R
-        """
+    script: "scripts/summaries.R"
