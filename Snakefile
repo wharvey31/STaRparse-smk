@@ -189,16 +189,35 @@ rule combine_csv:
         df.to_csv(output.csv, sep="\t", index=False)
 
 
+rule annovar_prep:
+    input:
+        csv = rules.combine_csv.output.csv,
+    output:
+        csv = f'results/summary/combined/Annovar/{COHORT}_Anno.csv'
+    threads: 1
+    resources:
+        mem=8,
+        hrs=24,
+    script:
+        "scripts/summaries_prep.R"        
+
+
+  anno_dir <- paste0(output, "/Annovar")
+  system(paste0("mkdir ", anno_dir))
+  anno_out <- paste0(anno_dir, "/", savename)
+    write.table(anno, paste0(anno_out, "_Anno.csv"), quote = FALSE, col.names = FALSE, row.names = FALSE, sep="\t")
+  system(paste0("perl /home/dannear/Binaries/annovar/annotate_variation.pl -out ", anno_dir, "/", savename,  "_Annovar -build ", paste0("hg", build)," ", anno_out, "_Anno.csv /home/dannear/Binaries/annovar/humandb"))
+
+
 rule summaries:
     input:
         csv=rules.combine_csv.output.csv,
     output:
-        # dirct=directory("results/summary/combined"),
         csv=f"results/summary/combined/{COHORT}_by_sample.csv",
     params:
         build=GENOME_BUILD,
-        script_dir=os.path.dirname(output.csv),
         cohort=COHORT,
+        script_dir=os.path.join(SDIR, "scripts/"),
     conda:
         "envs/r_conda.yaml"
     threads: 1

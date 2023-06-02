@@ -31,7 +31,7 @@ by_locus = function(df, output, savename, build){
   compile$Status <- ifelse(compile$Stab == 0, "STABLE", "POLYMORPHIC")
  
   #     Annotate Repeats
-  anno_dir <- paste0(output, "/Annonvar")
+  anno_dir <- paste0(output, "/Annovar")
   system(paste0("mkdir ", anno_dir))
   anno_out <- paste0(anno_dir, "/", savename)
   anno <- compile[c("Chr", "Start")]
