@@ -194,12 +194,17 @@ rule annovar_prep:
         csv = rules.combine_csv.output.csv,
     output:
         csv = f'results/summary/combined/Annovar/{COHORT}_Anno.csv'
+        comp = f'results/summary/combined/Annovar/{COHORT}_Compile.csv'
     threads: 1
+    params:
+        cohort=COHORT,
     resources:
         mem=8,
         hrs=24,
     script:
         "scripts/summaries_prep.R"        
+
+
 
 
   anno_dir <- paste0(output, "/Annovar")

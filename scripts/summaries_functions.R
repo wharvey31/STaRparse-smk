@@ -1,4 +1,4 @@
-by_locus = function(df, output, savename, build){
+by_locus_pre = function(df, output_prefix){
   #     Housekeeping
   df$All1 <- ifelse(df$All1 == 0, df$All2, df$All1)
   df$All2 <- ifelse(df$All2 == 0, df$All1, df$All2)
@@ -30,17 +30,22 @@ by_locus = function(df, output, savename, build){
   compile <- Reduce(function(x, y) merge(x, y, all=TRUE), list(ref, avera, medi, minreps[c("Call_ID", "min")], maxreps[c("Call_ID", "max")], counts, stability, stddev, ee50, ee100))
   compile$Status <- ifelse(compile$Stab == 0, "STABLE", "POLYMORPHIC")
  
-  #     Annotate Repeats
-  anno_dir <- paste0(output, "/Annovar")
-  system(paste0("mkdir ", anno_dir))
-  anno_out <- paste0(anno_dir, "/", savename)
   anno <- compile[c("Chr", "Start")]
   anno$End <- (anno$Start)+(3*compile$Ref_Units-1)
   anno$RA <- 0
   anno$AA <- "-"
-  write.table(anno, paste0(anno_out, "_Anno.csv"), quote = FALSE, col.names = FALSE, row.names = FALSE, sep="\t")
-  system(paste0("perl /home/dannear/Binaries/annovar/annotate_variation.pl -out ", anno_dir, "/", savename,  "_Annovar -build ", paste0("hg", build)," ", anno_out, "_Anno.csv /home/dannear/Binaries/annovar/humandb"))
-  genes <- read.csv(paste0(anno_out, "_Annovar.variant_function"), sep = '\t', header = FALSE)
+  write.table(anno, paste0(output_prefix, "_Anno.csv"), quote = FALSE, col.names = FALSE, row.names = FALSE, sep="\t")
+  write.table(compile, paste0(output_prefix, "_Compile.csv"), quote = FALSE, col.names = TRUE, row.names = FALSE, sep="\t")
+}
+
+
+
+
+
+
+by_locus_post = function(compile_file, genes_file, output, savename)
+  compile <- read.csv(genes_file, sep = '\t', header = TRUE)
+  genes <- read.csv(genes_file, sep = '\t', header = FALSE)
   genes$V1 <- revalue(genes$V1, c("upstream;downstream"="intergenic", "splicing"="intronic", "ncRNA_exonic"="ncRNA", "ncRNA_intronic"="ncRNA"))
   genes$V2 <- gsub("\\s*\\([^\\)]+\\)", "", genes$V2)
   genes$V2 <- gsub(",", "->", genes$V2)
