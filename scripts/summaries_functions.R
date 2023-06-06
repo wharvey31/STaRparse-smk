@@ -39,12 +39,8 @@ by_locus_pre = function(df, output_prefix){
 }
 
 
-
-
-
-
-by_locus_post = function(compile_file, genes_file, output, savename)
-  compile <- read.csv(genes_file, sep = '\t', header = TRUE)
+by_locus_post = function(compile_file, genes_file, output_prefix){
+  compile <- read.csv(compile_file, sep = '\t', header = TRUE)
   genes <- read.csv(genes_file, sep = '\t', header = FALSE)
   genes$V1 <- revalue(genes$V1, c("upstream;downstream"="intergenic", "splicing"="intronic", "ncRNA_exonic"="ncRNA", "ncRNA_intronic"="ncRNA"))
   genes$V2 <- gsub("\\s*\\([^\\)]+\\)", "", genes$V2)
@@ -58,7 +54,7 @@ by_locus_post = function(compile_file, genes_file, output, savename)
   names(compile) <- c("Call_ID", "Chr", "Start", "Ref_Units", "Mean_Units", "Med_Units", "Min_Units", "Max_Units", "Hits", "Instability_Rating", "SD", "EE50", "EE100", "Status", "Gene", "Region")
   compile$Instability_Rating <- round(compile$Instability_Rating, 3)
   compile$SD <- round(compile$SD, 3)
-  write.table(compile, paste0(output, savename, "_by_locus.csv"), quote = FALSE, col.names = TRUE, row.names = FALSE, sep="\t")
+  write.table(compile, paste0(output_prefix, "_by_locus.csv"), quote = FALSE, col.names = TRUE, row.names = FALSE, sep="\t")
   return(compile)
 }
 

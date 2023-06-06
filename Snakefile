@@ -141,7 +141,7 @@ rule jsonparse:
             #    LOOP THROUGH ALL JSON FILES AT GIVEN DIRECTORY
             with open(input.json) as json_file:
                 data = json.load(json_file)["LocusResults"]
-                #    LOOP THROUGH EACH READ WITHIN THE CURRENT JSON FILE
+            #    LOOP THROUGH EACH READ WITHIN THE CURRENT JSON FILE
             for x in data:
                 repeat = data[x]
                 #    ENSURE THAT READ WAS DECTECTED AND DATA IS PRESENT
@@ -191,36 +191,51 @@ rule combine_csv:
 
 rule annovar_prep:
     input:
-        csv = rules.combine_csv.output.csv,
+        csv=rules.combine_csv.output.csv,
     output:
-        csv = f'results/summary/combined/Annovar/{COHORT}_Anno.csv'
-        comp = f'results/summary/combined/Annovar/{COHORT}_Compile.csv'
+        csv=f"results/summary/combined/Annovar/{COHORT}_Anno.csv",
+        comp=f"results/summary/combined/Annovar/{COHORT}_Compile.csv",
     threads: 1
     params:
+        script_dir=os.path.join(SDIR, "scripts/"),
         cohort=COHORT,
     resources:
         mem=8,
         hrs=24,
     script:
-        "scripts/summaries_prep.R"        
+        "scripts/summaries_prep.R"
 
 
 
+# system(paste0("perl /home/dannear/Binaries/annovar/annotate_variation.pl -out ", anno_dir, "/", savename,  "_Annovar -build ", paste0("hg", build)," ", anno_out, "_Anno.csv /home/dannear/Binaries/annovar/humandb"))
+#   genes <- read.csv(paste0(anno_out, "_Annovar.variant_function"), sep = '\t', header = FALSE)
 
-  anno_dir <- paste0(output, "/Annovar")
-  system(paste0("mkdir ", anno_dir))
-  anno_out <- paste0(anno_dir, "/", savename)
-    write.table(anno, paste0(anno_out, "_Anno.csv"), quote = FALSE, col.names = FALSE, row.names = FALSE, sep="\t")
-  system(paste0("perl /home/dannear/Binaries/annovar/annotate_variation.pl -out ", anno_dir, "/", savename,  "_Annovar -build ", paste0("hg", build)," ", anno_out, "_Anno.csv /home/dannear/Binaries/annovar/humandb"))
-
+rule annovar:
+    input:
+        anno = rules.annovar_prep.output.csv,
+    output:
+        annovar = f"results/summary/combined/Annovar/{COHORT}_Annovar.variant_function",
+    params:
+        build=f"hg{GENOME_BUILD}",
+    envmodules:
+        "modules",
+        "modules-init",
+        "modules-gs/prod",
+        "modules-eichler/prod",
+        "annovar/202306",
+    shell:
+        """
+        annotate_variation.pl -out $( echo {output.annovar} | sed 's/.variant_function//' ) -build {params.build} {input.anno} $( dirname $( which annotate_variation.pl ) )/humandb
+        """
 
 rule summaries:
     input:
         csv=rules.combine_csv.output.csv,
+        annovar=rules.annovar.output.annovar,
+        comp=rules.annovar_prep.output.comp,
     output:
         csv=f"results/summary/combined/{COHORT}_by_sample.csv",
     params:
-        build=GENOME_BUILD,
         cohort=COHORT,
         script_dir=os.path.join(SDIR, "scripts/"),
     conda:
